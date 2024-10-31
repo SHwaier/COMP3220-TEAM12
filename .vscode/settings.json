@@ -1,0 +1,8 @@
+{
+	"files.eol": "\n",
+	"editor.formatOnSave": true,
+	"files.trimTrailingWhitespace": true,
+	"java.configuration.updateBuildConfiguration": "automatic",
+	"editor.tabSize": 4,
+	"editor.detectIndentation": false
+}
