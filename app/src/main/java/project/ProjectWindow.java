@@ -2,6 +2,8 @@ package project;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+
 import api.Record;
 import api.RecordsCentral;
 import project.ui.BarChart;
@@ -76,6 +78,7 @@ public class ProjectWindow extends JFrame {
         addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
             public void componentResized(java.awt.event.ComponentEvent e) {
+                overviewPanel.revalidate();
                 myPieChart.repaint();
                 lineGraph.repaint();
             }
@@ -115,7 +118,7 @@ public class ProjectWindow extends JFrame {
         gbc.gridy = 2;
         JComboBox<String> yearComboBox = new JComboBox<>(
                 api.RecordsCentral.getListOfYears(ElectricityGenerationRecords)); // years
-        
+
         filtersPanel.add(yearComboBox, gbc);
 
         // Row 3: Apply Filters Button
@@ -210,7 +213,12 @@ public class ProjectWindow extends JFrame {
         gbc.weighty = 1.0; // Larger weight for the pie chart to take most of the space
         gbc.fill = GridBagConstraints.BOTH;
         pieChartPanel.add(myPieChart, gbc);
-
+        gbc.gridy++;
+        JLabel pieChartDesc = new JLabel(
+                "Results show national electricity generation and available electricity for: " + SelectedYear);
+        pieChartLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        pieChartLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        pieChartPanel.add(pieChartDesc, gbc);
         // Adding pieChartPanel to the overview panel
         gbc.gridx = 1;
         gbc.gridy = 0;
@@ -218,7 +226,7 @@ public class ProjectWindow extends JFrame {
         gbc.weighty = 1.0;
         overviewPanel.add(pieChartPanel, gbc);
 
-        // JLabel 
+        // JLabel
 
         return overviewPanel;
     }
@@ -263,8 +271,27 @@ public class ProjectWindow extends JFrame {
      * Export data to a file or perform export action.
      */
     private void exportData() {
-        // Add your export logic here
-        System.out.println("Exporting data...");
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Export File");
+
+        // Set file chooser to save mode
+        fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+
+        // Set the default file name
+        fileChooser.setSelectedFile(new File("exported_data.csv")); // Default name, change extension if needed
+
+        // Show save dialog
+        int userSelection = fileChooser.showSaveDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            System.out.println("Saving data to: " + fileToSave.getAbsolutePath());
+
+            List<Record> recordsToExport = new ArrayList<>(
+                    RecordsCentral.getRecordsForYear(ElectricityGenerationRecords, SelectedYear));
+            // Call the method to perform export with the selected file path
+            api.io.ExportRecords.exportToCSV(fileToSave.getAbsolutePath(), recordsToExport);
+        }
     }
 
 }
