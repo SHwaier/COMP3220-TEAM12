@@ -2,20 +2,46 @@ package project;
 
 import javax.swing.*;
 import java.awt.*;
+import api.Record;
+import api.RecordsCentral;
+import project.ui.BarChart;
+import project.ui.BetterButton;
+import project.ui.LineGraph;
+import project.ui.PieChartPanel;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProjectWindow extends JFrame {
     GridBagConstraints gbc = new GridBagConstraints();
     private JPanel container = new JPanel();
-    private MyPieChart myPieChart;
+    private PieChartPanel myPieChart;
+    BarChart barChart;
+    LineGraph lineGraph;
+    private List<Record> ElectricityGenerationRecords = RecordsCentral.parseData("data/ElectricityGeneration.csv");
+    private List<Record> ElectricityAvailableRecords = RecordsCentral.parseData("data/ElectricityAvailable.csv");
+    String SelectedYear = "2005";
+    private static JPanel overviewPanel;
 
     public ProjectWindow() {
         super("COMP 3220 Project");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(800, 600);
         getContentPane().setPreferredSize(new Dimension(800, 600));
-        setResizable(false);
+        setResizable(true);
 
-        myPieChart = new MyPieChart();
+        Record totalGeneration = new Record("Total Generation", RecordsCentral.getTotalForYearAndPlace(
+                ElectricityGenerationRecords, SelectedYear, ElectricityGenerationRecords.get(0).getPlace()));
+        Record totalAvailable = new Record("Total Available", RecordsCentral.getTotalForYearAndPlace(
+                ElectricityAvailableRecords, SelectedYear, ElectricityAvailableRecords.get(0).getPlace()));
+        api.RecordsCentral.getTotalForPlace(ElectricityGenerationRecords,
+                ElectricityGenerationRecords.get(0).getPlace());
+        myPieChart = new PieChartPanel(List.of(totalGeneration, totalAvailable));
+        List<Record> overtimeRecords = new ArrayList<>(
+                RecordsCentral.getRecordsForPlace(ElectricityAvailableRecords,
+                        ElectricityAvailableRecords.get(0).getPlace()));
+        lineGraph = new LineGraph(overtimeRecords);
+
         container.setLayout(new GridBagLayout());
 
         JPanel filtersPanel = createFiltersPanel();
@@ -36,7 +62,7 @@ public class ProjectWindow extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         container.add(titleLabel, gbc);
 
-        JPanel overviewPanel = createOverviewPanel();
+        overviewPanel = createOverviewPanel();
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.gridheight = 1;
@@ -45,19 +71,20 @@ public class ProjectWindow extends JFrame {
         gbc.fill = GridBagConstraints.BOTH;
         container.add(overviewPanel, gbc);
 
-        JButton exportButton = new JButton("Export");
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.anchor = GridBagConstraints.SOUTHWEST;
-        container.add(exportButton, gbc);
-
         add(container);
+
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                myPieChart.repaint();
+                lineGraph.repaint();
+            }
+        });
 
         pack();
         setVisible(true);
+        setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
+
     }
 
     private JPanel createFiltersPanel() {
@@ -66,123 +93,60 @@ public class ProjectWindow extends JFrame {
         filtersPanel.setBackground(Color.WHITE);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(20, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+
+        // Row 0: Filters Label
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.NORTH;
         JLabel filtersLabel = new JLabel("Filters");
         filtersLabel.setFont(new Font("Arial", Font.BOLD, 16));
-
         filtersPanel.add(filtersLabel, gbc);
+
+        // Row 1: Year Label
         gbc.gridy = 1;
-        gbc.insets = new Insets(5, 5, 5, 70);
-        filtersPanel.add(new JLabel("Year"), gbc);
+        JLabel yearLabel = new JLabel("Year");
+        yearLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        filtersPanel.add(yearLabel, gbc);
+
+        // Row 2: Year ComboBox
         gbc.gridy = 2;
-        JComboBox<String> yearComboBox = new JComboBox<>(new String[]{"2023"}); //years
+        JComboBox<String> yearComboBox = new JComboBox<>(
+                api.RecordsCentral.getListOfYears(ElectricityGenerationRecords)); // years
+        
         filtersPanel.add(yearComboBox, gbc);
 
+        // Row 3: Apply Filters Button
         gbc.gridy = 3;
-        filtersPanel.add(new JLabel("Sector"), gbc);
-        gbc.gridy = 4;
-        JComboBox<String> sectorComboBox = new JComboBox<>(new String[]{"All"}); //sectos
-        filtersPanel.add(sectorComboBox, gbc);
-
-        gbc.gridy = 5;
-        filtersPanel.add(new JLabel("Region"), gbc);
-        gbc.gridy = 6;
-        JComboBox<String> regionComboBox = new JComboBox<>(new String[]{"All Regions"}); //regions
-        filtersPanel.add(regionComboBox, gbc);
-
-        gbc.gridy = 7;
-        gbc.insets = new Insets(10, 5, 5, 5);
-        JButton applyFiltersButton = new JButton("Apply Filters");
+        gbc.insets = new Insets(20, 10, 10, 10); // Add extra space above the button
+        BetterButton applyFiltersButton = new BetterButton("Apply Filters");
         filtersPanel.add(applyFiltersButton, gbc);
+        applyFiltersButton.addActionListener(e -> applyFilters(yearComboBox.getSelectedItem().toString()));
 
-        gbc.gridy = 8;
-        gbc.weighty = 1.0;
+        // Row 4: Spacer to push export button down
+        gbc.gridy = 4;
+        gbc.weighty = 1.0; // This spacer takes up extra vertical space
         filtersPanel.add(Box.createVerticalGlue(), gbc);
+
+        // Row 5: Export Button at the bottom
+        gbc.gridy = 5;
+        gbc.weighty = 0; // Reset vertical weight for the button
+        gbc.insets = new Insets(10, 10, 20, 10); // Extra space below the export button
+        gbc.anchor = GridBagConstraints.SOUTH; // Anchor at the bottom
+        BetterButton exportButton = new BetterButton("Export");
+        filtersPanel.add(exportButton, gbc);
+        exportButton.addActionListener(e -> exportData());
+
         return filtersPanel;
     }
 
-    class BarChart extends JPanel {
-        private int[] data;
-        private String[] labels;
-
-        public BarChart(int[] data, String[] labels) {
-            this.data = data;
-            this.labels = labels;
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            setBackground(Color.WHITE);
-
-            Graphics2D g2d = (Graphics2D) g;
-
-            g2d.setColor(Color.LIGHT_GRAY);
-            g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-
-            int barWidth = 30;
-            int spacing = 10;
-            Color[] colors = {Color.GREEN, Color.BLUE, Color.ORANGE, Color.RED};
-
-            int maxDataValue = 250;
-
-            for (int i = 0; i <= 10; i++) {
-                int y = getHeight() - 30 - i * (getHeight() - 50) / 10;
-                g2d.drawLine(45, y, getWidth() - 290, y);
-            }
-
-            for (int i = 0; i < data.length; i++) {
-                int x = 45 + (barWidth + spacing) * i;
-                g2d.drawLine(x, 20, x, getHeight() - 30);
-            }
-
-            for (int i = 0; i < data.length; i++) {
-                g2d.setColor(colors[i % colors.length]);
-                int x = 50 + (barWidth + spacing) * i;
-                int height = (int) (((double) data[i] / maxDataValue) * (getHeight() - 50 - 30));
-                int y = getHeight() - height - 30;
-
-                g2d.fillRect(x, y, barWidth, height);
-            }
-
-            g2d.setColor(Color.BLACK);
-            for (int i = 0; i <= 10; i++) {
-                int y = getHeight() - 30 - i * (getHeight() - 50) / 10;
-                String label = String.valueOf(i * maxDataValue / 10) + "m";
-                g2d.drawString(label, 10, y + 5);
-            }
-        }
-    }
-
-    class MyPieChart extends JPanel {
-        private int arcValue1, arcValue2;
-
-        public MyPieChart(int arcValue1, int arcValue2) {
-            this.arcValue1 = arcValue1;
-            this.arcValue2 = arcValue2;
-            repaint();
-        }
-
-        public MyPieChart() {
-            this(170, 190);// pie values
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            setBackground(Color.WHITE);
-            Graphics2D g2d = (Graphics2D) g;
-
-            g2d.setColor(Color.ORANGE);
-            g2d.fillArc(50, 50, 200, 200, 90, arcValue1);
-            g2d.setColor(Color.GREEN);
-            g2d.fillArc(50, 50, 200, 200, 90+arcValue1, arcValue2);
-        }
-    }
-
-
+    /**
+     * Create the overview panel with the pie chart and line graph.
+     * 
+     * @return a panel with the pie chart and line graph.
+     */
     private JPanel createOverviewPanel() {
         JPanel overviewPanel = new JPanel();
         overviewPanel.setLayout(new GridBagLayout());
@@ -191,45 +155,116 @@ public class ProjectWindow extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.BOTH;
 
-        JPanel barChartPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        barChartPanel.setBackground(Color.WHITE);
+        JPanel lineGraphPanel = new JPanel(new GridBagLayout());
 
-        JLabel barChartLabel = new JLabel("Electric Overview");
-        barChartPanel.add(barChartLabel);
+        lineGraphPanel.setBackground(Color.WHITE);
+        // Setting up GridBagConstraints for components within pieChartPanel
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.1; // Small weight for the label to take minimal space
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.PAGE_START;
+        gbc.insets = new Insets(10, 10, 10, 10); // Add padding for spacing
 
-        int[] data = {230, 200, 30, 10};// bar values
-        String[] labels = {"Total Generation", "Total Sales", "Exports to US", "Imports from US"};
-        BarChart barChart = new BarChart(data, labels);
-        barChart.setPreferredSize(new Dimension(500, 300));
+        // Add the label to the first row
+        JLabel lineGraphLabel = new JLabel("Electricity Overview");
+        lineGraphLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        lineGraphLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        lineGraphPanel.add(lineGraphLabel, gbc);
 
-        barChartPanel.add(barChart);
+        // Move to the next row for the line graph
+        gbc.gridy++;
+        gbc.weighty = 1.0; // Larger weight for the pie chart to take most of the space
+        gbc.fill = GridBagConstraints.BOTH;
+        lineGraphPanel.add(lineGraph, gbc);
 
+        // Adding pieChartPanel to the overview panel
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 0.5;
         gbc.weighty = 1.0;
-        overviewPanel.add(barChartPanel, gbc);
+        overviewPanel.add(lineGraphPanel, gbc);
 
-        JPanel pieChartPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        // Setting up the pie chart panel with GridBagLayout
+        JPanel pieChartPanel = new JPanel(new GridBagLayout());
         pieChartPanel.setBackground(Color.WHITE);
 
-        JLabel pieChartLabel = new JLabel("Electricity Sales Distribution");
-        pieChartLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
-        pieChartPanel.add(pieChartLabel);
+        // Setting up GridBagConstraints for components within pieChartPanel
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.1; // Small weight for the label to take minimal space
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.PAGE_START;
+        gbc.insets = new Insets(10, 10, 10, 10); // Add padding for spacing
 
-        myPieChart.setPreferredSize(new Dimension(500, 500));
-        pieChartPanel.add(myPieChart);
+        // Add the label to the first row
+        JLabel pieChartLabel = new JLabel("Electricity Generation vs. Available Electricity");
+        pieChartLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        pieChartLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        pieChartPanel.add(pieChartLabel, gbc);
 
+        // Move to the next row for the pie chart
+        gbc.gridy++;
+        gbc.weighty = 1.0; // Larger weight for the pie chart to take most of the space
+        gbc.fill = GridBagConstraints.BOTH;
+        pieChartPanel.add(myPieChart, gbc);
+
+        // Adding pieChartPanel to the overview panel
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.weightx = 0.5;
+        gbc.weighty = 1.0;
         overviewPanel.add(pieChartPanel, gbc);
+
+        // JLabel 
 
         return overviewPanel;
     }
 
+    /**
+     * Apply filters based on the selected year.
+     *
+     * @param selectedYear The year selected from the combo box.
+     */
+    private void applyFilters(String selectedYear) {
+        this.SelectedYear = selectedYear;
+        System.out.println("Applying filters for year: " + selectedYear);
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(ProjectWindow::new);
+        // Create updated records for the pie chart and line graph
+        Record totalGeneration = new Record("Total Generation", RecordsCentral.getTotalForYearAndPlace(
+                ElectricityGenerationRecords, SelectedYear, ElectricityGenerationRecords.get(0).getPlace()));
+        Record totalAvailable = new Record("Total Available", RecordsCentral.getTotalForYearAndPlace(
+                ElectricityAvailableRecords, SelectedYear, ElectricityAvailableRecords.get(0).getPlace()));
+
+        myPieChart.setRecords(List.of(totalGeneration, totalAvailable));
+        List<Record> overtimeRecords = new ArrayList<>(
+                RecordsCentral.getRecordsForPlace(ElectricityAvailableRecords,
+                        ElectricityAvailableRecords.get(0).getPlace()));
+        lineGraph.setRecords(overtimeRecords);
+
+        overviewPanel.removeAll();
+        overviewPanel = createOverviewPanel();
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.gridheight = 1;
+        gbc.weightx = 0.8;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        container.add(overviewPanel, gbc);
+
+        // Revalidate and repaint the overviewPanel to refresh the UI
+        overviewPanel.revalidate();
+        overviewPanel.repaint();
     }
+
+    /**
+     * Export data to a file or perform export action.
+     */
+    private void exportData() {
+        // Add your export logic here
+        System.out.println("Exporting data...");
+    }
+
 }
