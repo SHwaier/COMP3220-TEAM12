@@ -6,7 +6,6 @@ import java.io.File;
 
 import api.Record;
 import api.RecordsCentral;
-import project.ui.BarChart;
 import project.ui.BetterButton;
 import project.ui.LineGraph;
 import project.ui.PieChartPanel;
@@ -18,11 +17,10 @@ public class ProjectWindow extends JFrame {
     GridBagConstraints gbc = new GridBagConstraints();
     private JPanel container = new JPanel();
     private PieChartPanel myPieChart;
-    BarChart barChart;
-    LineGraph lineGraph;
+    private LineGraph lineGraph;
     private List<Record> ElectricityGenerationRecords = RecordsCentral.parseData("data/ElectricityGeneration.csv");
     private List<Record> ElectricityAvailableRecords = RecordsCentral.parseData("data/ElectricityAvailable.csv");
-    String SelectedYear = "2005";
+    private String SelectedYear = "2005";
     private static JPanel overviewPanel;
 
     public ProjectWindow() {
