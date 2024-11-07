@@ -133,4 +133,14 @@ public class RecordsCentral {
 
         return records.stream().filter(r -> r.getPlace().equals(place)).toList();
     }
+
+    /**
+     * Get the records for a given year and place
+     * 
+     * @param records list of records to query from
+     * @return a list of records for the given year and place
+     */
+    public static String[] getListOfYears(List<Record> records) {
+        return records.stream().map(Record::getYear).distinct().toArray(String[]::new);
+    }
 }

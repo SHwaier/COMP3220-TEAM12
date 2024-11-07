@@ -4,6 +4,8 @@ package api;
  * Used to store the data of a single record
  * Data includes the year, place and the amount of power
  * generated/exported/imported
+ * 
+ * @see RecordsCentral
  */
 public class Record {
     private String year;
@@ -22,6 +24,18 @@ public class Record {
         this.setYear(year);
         this.setPlace(place);
         this.setAmount(amount);
+    }
+
+    /**
+     * Constructor for the Record class
+     * 
+     * @param place  the place of the record
+     * @param amount the amount of power generated/exported
+     */
+    public Record(String place, int amount) {
+        this.setPlace(place);
+        this.setAmount(amount);
+        this.year = "";
     }
 
     /**
@@ -85,7 +99,8 @@ public class Record {
     }
 
     /**
-     * Override the toString method to provide a custom string representation of the record
+     * Override the toString method to provide a custom string representation of the
+     * record
      */
     @Override
     public String toString() {
