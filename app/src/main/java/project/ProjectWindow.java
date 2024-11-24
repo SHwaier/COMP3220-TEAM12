@@ -1,17 +1,29 @@
 package project;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.Box;
+import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import api.Record;
 import api.RecordsCentral;
 import project.ui.BetterButton;
 import project.ui.LineGraph;
 import project.ui.PieChartPanel;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ProjectWindow extends JFrame {
     GridBagConstraints gbc = new GridBagConstraints();
@@ -29,7 +41,8 @@ public class ProjectWindow extends JFrame {
         setSize(800, 600);
         getContentPane().setPreferredSize(new Dimension(800, 600));
         setResizable(true);
-
+        ImageIcon imageIcon = new ImageIcon(getClass().getResource("/logo.png"));
+        setIconImage(imageIcon.getImage());
         Record totalGeneration = new Record("Total Generation", RecordsCentral.getTotalForYearAndPlace(
                 ElectricityGenerationRecords, SelectedYear, ElectricityGenerationRecords.get(0).getPlace()));
         Record totalAvailable = new Record("Total Available", RecordsCentral.getTotalForYearAndPlace(
@@ -131,21 +144,30 @@ public class ProjectWindow extends JFrame {
         gbc.weighty = 1.0; // This spacer takes up extra vertical space
         filtersPanel.add(Box.createVerticalGlue(), gbc);
 
-        // Row 5: Export Button at the bottom
+        // Row 5: Export Button (CSV) at the bottom
         gbc.gridy = 5;
         gbc.weighty = 0; // Reset vertical weight for the button
         gbc.insets = new Insets(10, 10, 20, 10); // Extra space below the export button
         gbc.anchor = GridBagConstraints.SOUTH; // Anchor at the bottom
-        BetterButton exportButton = new BetterButton("Export");
+        BetterButton exportButton = new BetterButton("Export as CSV");
         filtersPanel.add(exportButton, gbc);
-        exportButton.addActionListener(e -> exportData());
+        exportButton.addActionListener(e -> exportData("exported_data.csv"));
+
+        // Row 6: Export Button (JSON) at the bottom
+        gbc.gridy = 6;
+        gbc.weighty = 0; // Reset vertical weight for the button
+        gbc.insets = new Insets(10, 10, 20, 10); // Extra space below the export button
+        gbc.anchor = GridBagConstraints.SOUTH; // Anchor at the bottom
+        BetterButton exportButton2 = new BetterButton("Export as JSON");
+        filtersPanel.add(exportButton2, gbc);
+        exportButton2.addActionListener(e -> exportData("exported_data.json"));
 
         return filtersPanel;
     }
 
     /**
      * Create the overview panel with the pie chart and line graph.
-     * 
+     *
      * @return a panel with the pie chart and line graph.
      */
     private JPanel createOverviewPanel() {
@@ -268,7 +290,7 @@ public class ProjectWindow extends JFrame {
     /**
      * Export data to a file or perform export action.
      */
-    private void exportData() {
+    private void exportData(String fileName) {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Save Export File");
 
@@ -276,7 +298,7 @@ public class ProjectWindow extends JFrame {
         fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
 
         // Set the default file name
-        fileChooser.setSelectedFile(new File("exported_data.csv")); // Default name, change extension if needed
+        fileChooser.setSelectedFile(new File(fileName)); // Default name, change extension if needed
 
         // Show save dialog
         int userSelection = fileChooser.showSaveDialog(this);
