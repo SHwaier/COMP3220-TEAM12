@@ -5,12 +5,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 import api.Record;
+import api.RecordsList;
 
 /**
  * Provides methods to export records to different file formats.
@@ -52,7 +56,8 @@ public class ExportRecords {
                 }
 
                 // Content stream for table data
-                try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true)) {
+                try (PDPageContentStream contentStream = new PDPageContentStream(document, page,
+                        PDPageContentStream.AppendMode.APPEND, true)) {
                     contentStream.setFont(PDType1Font.HELVETICA, 12);
 
                     // Write each record's information
@@ -78,14 +83,14 @@ public class ExportRecords {
         }
     }
 
-    public static void exportToCSV(String filePath, List<Record> records) {
+    public static void exportToCSV(String filePath, RecordsList records) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             // Write the CSV header
             writer.write("Year,Place,Amount");
             writer.newLine();
 
             // Write each record as a CSV line
-            for (Record record : records) {
+            for (Record record : records.getAllRecords()) {
                 writer.write(record.getYear() + "," + record.getPlace() + "," + record.getAmount());
                 writer.newLine();
             }
@@ -93,6 +98,22 @@ public class ExportRecords {
             System.out.println("CSV file created successfully at " + filePath);
         } catch (IOException e) {
             System.err.println("Error writing to CSV file: " + e.getMessage());
+        }
+    }
+
+    public static void exportToJSON(String filePath, RecordsList records) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+            // Convert the list of records to JSON
+            String json = gson.toJson(records.getAllRecords());
+
+            // Write JSON to the file
+            writer.write(json);
+
+            System.out.println("JSON file created successfully at " + filePath);
+        } catch (IOException e) {
+            System.err.println("Error writing to JSON file: " + e.getMessage());
         }
     }
 }
