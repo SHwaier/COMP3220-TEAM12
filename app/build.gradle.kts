@@ -24,6 +24,8 @@ dependencies {
     // This dependency is used by the application.
     implementation(libs.guava)    
     implementation("org.apache.pdfbox:pdfbox:2.0.27") // Latest version of PDFBox
+    implementation ("com.google.code.gson:gson:2.8.9")
+
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
