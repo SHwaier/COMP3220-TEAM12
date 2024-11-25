@@ -2,45 +2,32 @@ package project.ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import api.Record;
+import api.RecordFactory;
+import api.RecordsList;
+import java.util.List;
 
 /**
  * A JPanel that displays a responsive pie chart of the given records.
  */
 public class PieChartPanel extends JPanel {
 
-    // List of records to display in the pie chart
-    private List<Record> records;
+    private RecordsList records;
 
-    // Colors for the chart slices
-    private final Color[] colors = { Color.ORANGE, new Color(0, 102, 204), Color.MAGENTA, Color.CYAN, Color.RED,
-            Color.BLUE,
-            Color.GREEN, Color.PINK, Color.YELLOW };
+    // Dynamically generated colors for chart slices
+    private final List<Color> colors = generateColors();
 
-    /**
-     * Create a new PieChartPanel with the given records
-     * 
-     * @param records the records to display in the pie chart
-     */
-    public PieChartPanel(List<Record> records) {
-        this.records = records;
+    public PieChartPanel(RecordsList records) {
+        this.records = consolidateRecords(records);
     }
 
-    /**
-     * Set the records to display in the pie chart
-     * 
-     * @param records the records to display
-     */
-    public void setRecords(List<Record> records) {
-        this.records = records;
+    public void setRecords(RecordsList records) {
+        this.records = consolidateRecords(records);
+        repaint();
     }
 
-    /**
-     * Paint the pie chart and legend on the panel
-     * 
-     * @param g the Graphics object to paint on
-     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -49,14 +36,9 @@ public class PieChartPanel extends JPanel {
         drawLegend(g);
     }
 
-    /**
-     * Draw the pie chart on the panel.
-     * 
-     * @param g the Graphics object to paint on
-     */
     private void drawPieChart(Graphics g) {
-        if (records == null || records.isEmpty()) {
-            return; // No data to display
+        if (records == null || records.getAllRecords().isEmpty()) {
+            return;
         }
 
         Graphics2D g2d = (Graphics2D) g;
@@ -64,72 +46,107 @@ public class PieChartPanel extends JPanel {
 
         int width = getWidth();
         int height = getHeight();
-
-        // Set diameter to be 50% of the panel's smaller dimension for better
-        // responsiveness
         int diameter = (int) (Math.min(width, height) * 0.5);
         int x = (width - diameter) / 2;
-        int y = height / 6; // Position in the top third of the panel
+        int y = height / 6;
 
-        // Calculate total amount for scaling
-        double totalAmount = records.stream().mapToDouble(Record::getAmount).sum();
+        double totalAmount = records.getAllRecords().stream().mapToDouble(Record::getAmount).sum();
+        if (totalAmount == 0) {
+            g2d.setColor(Color.BLACK);
+            g2d.drawString("No Data Available", width / 2 - 50, height / 2);
+            return;
+        }
 
-        // Start angle for first slice
         double startAngle = 0;
 
-        for (int i = 0; i < records.size(); i++) {
-            Record record = records.get(i);
+        for (int i = 0; i < records.getAllRecords().size(); i++) {
+            Record record = records.getAllRecords().get(i);
             double percentage = record.getAmount() / totalAmount;
-            double angle = percentage * 360 + 0.5;
+            double angle = percentage * 360;
 
-            // Set color for the slice
-            g2d.setColor(colors[i % colors.length]);
-
-            // Draw the arc for the slice
+            g2d.setColor(colors.get(i % colors.size()));
             g2d.fillArc(x, y, diameter, diameter, (int) startAngle, (int) angle);
 
-            // Update start angle for next slice
             startAngle += angle;
         }
     }
 
-    /**
-     * Draw the legend on the panel.
-     * 
-     * @param g the Graphics object to paint on
-     */
     private void drawLegend(Graphics g) {
-        if (records == null || records.isEmpty()) {
-            return; // No data to display
+        if (records == null || records.getAllRecords().isEmpty()) {
+            return;
         }
 
         Graphics2D g2d = (Graphics2D) g;
 
-        // Position the legend dynamically below the pie chart
         int width = getWidth();
         int height = getHeight();
-        int legendY = height / 2 + (int) (Math.min(width, height) * 0.3) + 20; // Adjusted to start below the pie chart
-        int legendX = width / 2 - 50; // Center the legend horizontally
+        int legendY = height / 2 + (int) (Math.min(width, height) * 0.3) + 20;
+        int legendX = 20;
 
-        // Font size relative to panel size
-        int fontSize = Math.max(10, (int) (width * 0.012)); // Scaled font size
+        int fontSize = Math.max(10, (int) (width * 0.012));
         g2d.setFont(new Font("Helvetica", Font.PLAIN, fontSize));
 
-        // Color array for the legend boxes
-        for (int i = 0; i < records.size(); i++) {
-            Record record = records.get(i);
-            double percentage = record.getAmount() / records.stream().mapToDouble(Record::getAmount).sum();
+        double totalAmount = records.getAllRecords().stream().mapToDouble(Record::getAmount).sum();
 
-            // Draw legend color box
-            g2d.setColor(colors[i % colors.length]);
+        for (int i = 0; i < records.getAllRecords().size(); i++) {
+            Record record = records.getAllRecords().get(i);
+            double percentage = record.getAmount() / totalAmount;
+
+            String label = record.getPlace() + " (" + String.format("%.1f", percentage * 100) + "%)";
+            if (label.length() > 20) {
+                label = label.substring(0, 17) + "...";
+            }
+
+            g2d.setColor(colors.get(i % colors.size()));
             g2d.fillRect(legendX, legendY + i * (fontSize + 5), 10, 10);
 
-            // Draw legend text
             g2d.setColor(Color.BLACK);
-            g2d.drawString(
-                    record.getPlace() + " (" + String.format("%.1f", percentage * 100) + "%)",
-                    legendX + 15,
-                    legendY + i * (fontSize + 5) + fontSize);
+            g2d.drawString(label, legendX + 15, legendY + i * (fontSize + 5) + fontSize);
         }
+    }
+
+    /**
+     * Consolidates records with the same place into a single record.
+     * Uses the RecordFactory to create new records with an average amount.
+     *
+     * @param originalRecords the original RecordsList
+     * @return a consolidated RecordsList
+     */
+    private RecordsList consolidateRecords(RecordsList originalRecords) {
+        if (originalRecords == null || originalRecords.getAllRecords().isEmpty()) {
+            return new RecordsList(List.of());
+        }
+
+        Map<String, List<Record>> groupedByPlace = originalRecords.getAllRecords().stream()
+                .collect(Collectors.groupingBy(Record::getPlace));
+
+        List<Record> consolidatedRecords = groupedByPlace.entrySet().stream()
+                .map(entry -> {
+                    String place = entry.getKey();
+                    double averageAmount = entry.getValue().stream().mapToDouble(Record::getAmount).average()
+                            .orElse(0.0);
+                    return RecordFactory.createRecord("0", place, (int) Math.round(averageAmount));
+                })
+                .collect(Collectors.toList());
+
+        return new RecordsList(consolidatedRecords);
+    }
+
+    private List<Color> generateColors() {
+        List<Color> colorPalette = new ArrayList<>();
+        colorPalette.add(Color.ORANGE);
+        colorPalette.add(new Color(0, 102, 204));
+        colorPalette.add(Color.MAGENTA);
+        colorPalette.add(Color.CYAN);
+        colorPalette.add(Color.RED);
+        colorPalette.add(Color.BLUE);
+        colorPalette.add(Color.GREEN);
+        colorPalette.add(Color.PINK);
+        colorPalette.add(Color.YELLOW);
+
+        for (int i = 0; i < 50; i++) {
+            colorPalette.add(new Color((int) (Math.random() * 0x1000000)));
+        }
+        return colorPalette;
     }
 }
