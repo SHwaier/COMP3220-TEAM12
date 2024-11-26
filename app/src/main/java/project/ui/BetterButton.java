@@ -11,6 +11,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 
+/**
+ * A custom JButton with rounded corners and hover effects.
+ * Nicer colors
+ */
 public class BetterButton extends JButton {
     private Color hoverColor = new Color(176, 207, 203);
     private boolean isHovering = false;
@@ -27,6 +31,7 @@ public class BetterButton extends JButton {
         setFont(new Font(Font.DIALOG, Font.PLAIN, 16));
         setBackground(new Color(5, 99, 232));
         setHoverColor(new Color(0, 106, 255));
+        setForeground(Color.WHITE);
         setBorderRadius(10);
 
         addMouseListener(new MouseAdapter() {
@@ -71,6 +76,9 @@ public class BetterButton extends JButton {
         g2.dispose();
     }
 
+    /*
+     * Some usefule getters and setters
+     */
     public Color getHoverColor() {
         return hoverColor;
     }
