@@ -6,9 +6,21 @@ import api.RecordsList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * A filter that filters records based on the year they are from, implemented
+ * using the Filter interface
+ * 
+ * @see Filter
+ */
 public class YearFilter implements Filter {
+    // List of years to filter by
     private final List<String> years;
 
+    /**
+     * Constructor for the YearFilter
+     * 
+     * @param years the years to filter by
+     */
     public YearFilter(List<String> years) {
         this.years = years;
     }

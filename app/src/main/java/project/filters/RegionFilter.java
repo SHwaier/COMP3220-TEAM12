@@ -6,9 +6,19 @@ import api.RecordsList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * A filter that filters records based on the region they are from, implemented using the Filter interface
+ * @see Filter
+ */
 public class RegionFilter implements Filter {
+    // List of regions to filter by
     private final List<String> regions;
 
+    /**
+     * Constructor for the RegionFilter
+     * 
+     * @param regions the regions to filter by
+     */
     public RegionFilter(List<String> regions) {
         this.regions = regions;
     }

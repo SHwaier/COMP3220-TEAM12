@@ -8,10 +8,19 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A JComboBox that allows multiple items to be selected.
+ * Each item is displayed with a checkbox.
+ */
 public class MultiSelectComboBox extends JComboBox<String> {
     private final String[] items;
     private final List<String> selectedItems = new ArrayList<>();
 
+    /**
+     * Create a new MultiSelectComboBox with the given items.
+     * 
+     * @param items The items to display in the combo box
+     */
     public MultiSelectComboBox(String[] items) {
         super(items);
         this.items = items;
@@ -42,6 +51,9 @@ public class MultiSelectComboBox extends JComboBox<String> {
         addPopupBehavior();
     }
 
+    /**
+     * Add a mouse listener to the popup to prevent it from auto-closing.
+     */
     private void addPopupBehavior() {
         BasicComboPopup popup = getPopup();
         popup.addMouseListener(new MouseAdapter() {
@@ -52,19 +64,36 @@ public class MultiSelectComboBox extends JComboBox<String> {
         });
     }
 
+    /**
+     * Get the BasicComboPopup from the UI.
+     * 
+     * @return The BasicComboPopup
+     */
     private BasicComboPopup getPopup() {
         return (BasicComboPopup) getUI().getAccessibleChild(this, 0);
     }
 
+    /**
+     * Toggle the selection of the given item.
+     * 
+     * @param item The item to toggle
+     */
     private void toggleSelection(String item) {
         if (selectedItems.contains(item)) {
             selectedItems.remove(item);
+            this.selectedItems.remove(item);
         } else {
             selectedItems.add(item);
+            this.selectedItems.add(item);
         }
         repaint();
     }
 
+    /**
+     * Get the list of selected items.
+     * 
+     * @return The list of selected items
+     */
     public List<String> getSelectedItems() {
         return new ArrayList<>(selectedItems);
     }
@@ -82,5 +111,14 @@ public class MultiSelectComboBox extends JComboBox<String> {
 
             return this;
         }
+    }
+
+    /**
+     * Clear the selection of all items.
+     */
+    public void clearSelection() {
+        selectedItems.clear();
+        this.selectedItems.clear();
+        repaint();
     }
 }

@@ -7,6 +7,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import api.RecordsList;
 import project.ProjectWindow;
 
+/**
+ * Class that handles exporting records to a file.
+ */
 public class Export {
 
     /**
