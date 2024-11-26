@@ -1,10 +1,8 @@
 package project;
 
 import javax.swing.*;
-import javax.xml.crypto.Data;
 
 import java.awt.*;
-import java.io.File;
 
 // project and api imports
 import api.RecordsCentral;
@@ -29,9 +27,11 @@ public class ProjectWindow extends JFrame {
         public ProjectWindow() {
                 super("COMP 3220 Project");
                 setDefaultCloseOperation(EXIT_ON_CLOSE);
-                setSize(800, 600);
+                ImageIcon imageIcon = new ImageIcon(getClass().getResource("/logo.png"));
+                setIconImage(imageIcon.getImage());
+                setSize(1280, 720);
                 this.setMinimumSize(new Dimension(1280, 720));
-                getContentPane().setPreferredSize(new Dimension(800, 600));
+                getContentPane().setPreferredSize(new Dimension(1280, 720));
                 setResizable(true);
 
                 initializeData();
