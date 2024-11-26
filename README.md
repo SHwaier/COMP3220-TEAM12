@@ -15,7 +15,7 @@ The JavaDoc JAR file can be found at: [https://github.com/SHwaier/COMP3220-TEAM1
 
 You can download all the documentation if you would like, or just the JavaDoc JAR file.
 ## UML Diagrams
-All the UML diagrams used for the project in each iteration can be found here: []()
+All the UML diagrams used for the project in each iteration can be found here: [https://shwaier.github.io/COMP3220-TEAM12/UML](https://shwaier.github.io/COMP3220-TEAM12/UML)
 ## Authors:
 - Saymon Hwaier
 - Abid Rahman
