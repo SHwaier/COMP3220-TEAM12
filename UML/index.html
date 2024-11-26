@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Patterns Documentation</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+
+        header {
+            background-color: #007acc;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background-color: #007acc;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: background 0.3s ease, border-bottom 0.3s ease;
+        }
+
+        .tab:hover {
+            background-color: #005b99;
+        }
+
+        .tab.active {
+            border-bottom: 3px solid #ffcc00;
+            background-color: #005b99;
+        }
+
+        /* Content */
+        .tab-content {
+            display: none;
+            padding: 20px;
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        h2 {
+            color: #005b99;
+        }
+
+        img {
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #007acc;
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>UML Documentation</h1>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" data-tab="phase1">PHASE 1</div>
+        <div class="tab" data-tab="phase2">PHASE 2</div>
+        <div class="tab" data-tab="phase3">PHASE 3</div>
+    </div>
+
+    <!-- Tab Contents -->
+    <div class="tab-content active" id="phase1">
+        <h2>Phase 1</h2>
+        <p>Content for Phase 1 goes here.</p>
+    </div>
+
+    <div class="tab-content" id="phase2">
+        <h2>Phase 2</h2>
+        <p>Content for Phase 2 goes here.</p>
+    </div>
+
+    <div class="tab-content" id="phase3">
+        <section>
+            <div class="pattern">
+                <img src="img/PHASE3/UML1.png" alt="Singleton Pattern UML">
+                <h2>1. Singleton Pattern (DataManager)</h2>
+                <p><strong>Usage:</strong> Ensures a single instance of the DataManager class across the entire
+                    application.</p>
+                <p><strong>Implementation:</strong> A private static instance of RecordsCentral and a public static
+                    <code>getInstance()</code> method to access the single instance.
+                </p>
+                <p><strong>Purpose:</strong> Streamlined and centralized access to resources across the app, improving
+                    data access and reducing redundancy.</p>
+            </div>
+
+            <div class="pattern">
+                <img src="img/PHASE3/UML2.png" alt="Factory Pattern UML">
+                <h2>2. Factory Pattern (RecordFactory)</h2>
+                <p><strong>Usage:</strong> Creates instances of the <code>Record</code> class.</p>
+                <p><strong>Implementation:</strong>
+                    <code>RecordFactory.createRecord(String year, String place, int amount)</code> validates inputs and
+                    encapsulates the creation logic for Record objects.
+                </p>
+                <p><strong>Purpose:</strong> Centralizes object creation and enforces validation to ensure consistency
+                    and reusability.</p>
+            </div>
+
+            <div class="pattern">
+                <img src="img/PHASE3/UML3.png" alt="Strategy Pattern UML">
+                <h2>3. Strategy Pattern (FilterManager and Filters)</h2>
+                <p><strong>Usage:</strong> Dynamically applies different filters (e.g., <code>YearFilter</code>,
+                    <code>RegionFilter</code>) to the data.
+                </p>
+                <p><strong>Implementation:</strong></p>
+                <ul>
+                    <li><code>Filter</code> interface defines the <code>apply</code> method.</li>
+                    <li>Concrete implementations like <code>YearFilter</code> and <code>RegionFilter</code> provide
+                        specific filtering logic.</li>
+                    <li><code>FilterManager</code> aggregates and applies multiple filters dynamically.</li>
+                </ul>
+                <p><strong>Purpose:</strong> Provides flexibility to add or combine filters without modifying the core
+                    logic, adhering to the Open/Closed Principle.</p>
+            </div>
+
+            <div class="pattern">
+                <img src="img/PHASE3/UML4.png" alt="Composite Pattern UML">
+                <h2>4. Composite Pattern (RecordsList)</h2>
+                <p><strong>Usage:</strong> Encapsulates a collection of <code>Record</code> objects and provides
+                    operations to manipulate and retrieve subsets of the data.</p>
+                <p><strong>Implementation:</strong> <code>RecordsList</code> acts as a container for multiple
+                    <code>Record</code> objects and provides methods like <code>getRecordsForYear</code> and
+                    <code>getRecordsForPlace</code>.
+                </p>
+                <p><strong>Purpose:</strong> Treats collections of objects uniformly, simplifying operations on grouped
+                    data.</p>
+            </div>
+
+            <div class="pattern">
+                <img src="img/PHASE3/UML5.png" alt="Adapter Pattern UML">
+                <h2>5. Adapter Pattern (UI Filters Integration)</h2>
+                <p><strong>Usage:</strong> Integrates <code>MultiSelectComboBox</code> and filter logic with the
+                    <code>FilterManager</code> for seamless application of user selections.
+                </p>
+                <p><strong>Implementation:</strong> Adapts the multi-select UI inputs into a form usable by the
+                    <code>FilterManager</code>, such as converting selected items into <code>RegionFilter</code> or
+                    <code>YearFilter</code> for application on <code>RecordsList</code>.
+                </p>
+                <p><strong>Purpose:</strong> Bridges the gap between the UI layer and the business logic, ensuring
+                    compatibility.</p>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Design Patterns Documentation</p>
+    </footer>
+
+    <script>
+        // Tab functionality
+        const tabs = document.querySelectorAll('.tab');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                contents.forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>
