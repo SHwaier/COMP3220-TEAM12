@@ -4,11 +4,12 @@ JavaDoc for this project includes, but is not limited to:
 - API 
 - Project Classes
 
-
-
 ## Code Repository
 The code repository can be found at: [Here](https://github.com/SHwaier/COMP3220-TEAM12).
 
+## JavaDoc Release
+The JavaDoc JAR file can be found at: [HERE](https://github.com/SHwaier/COMP3220-TEAM12/releases/)
+You can download all the documentation if you would like, or just the JavaDoc JAR file.
 
 ## Authors:
 - Saymon Hwaier
