@@ -10,7 +10,7 @@ import api.RecordsList;
 import java.util.List;
 
 /**
- * A JPanel that displays a responsive pie chart of the given records.
+ * A JPanel that displays a pie chart of the records in the RecordsList.
  */
 public class PieChartPanel extends JPanel {
 
@@ -18,24 +18,50 @@ public class PieChartPanel extends JPanel {
 
     // Dynamically generated colors for chart slices
     private final List<Color> colors = generateColors();
+    private JPanel legendContainer;
 
+    /**
+     * Creates a new PieChartPanel with the given RecordsList.
+     * 
+     * @param records the records to display
+     */
     public PieChartPanel(RecordsList records) {
         this.records = consolidateRecords(records);
+        setLayout(new BorderLayout()); // Use BorderLayout to separate pie chart and legend
+
+        // Create a scrollable legend panel
+        JScrollPane legendScrollPane = createLegendScrollPane();
+        add(legendScrollPane, BorderLayout.SOUTH); // Move legend below the pie chart
+
+        // Create a pie chart panel
+        JPanel pieChartCanvas = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                setBackground(Color.WHITE);
+                drawPieChart(g);
+            }
+        };
+        pieChartCanvas.setPreferredSize(new Dimension(400, 400)); // Fixed size for the pie chart
+        add(pieChartCanvas, BorderLayout.CENTER);
     }
 
+    /**
+     * Set the records to display on the pie chart
+     * 
+     * @param records the records to display
+     */
     public void setRecords(RecordsList records) {
         this.records = consolidateRecords(records);
+        refreshLegend(); // Update the legend whenever data changes
         repaint();
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        setBackground(Color.WHITE);
-        drawPieChart(g);
-        drawLegend(g);
-    }
-
+    /**
+     * Draw the pie chart on the given Graphics object.
+     * 
+     * @param g the Graphics object to draw on
+     */
     private void drawPieChart(Graphics g) {
         if (records == null || records.getAllRecords().isEmpty()) {
             return;
@@ -71,20 +97,34 @@ public class PieChartPanel extends JPanel {
         }
     }
 
-    private void drawLegend(Graphics g) {
+    /**
+     * Create a scrollable panel to display the legend of the pie chart.
+     * @return a JScrollPane containing the legend
+     */
+    private JScrollPane createLegendScrollPane() {
+        legendContainer = new JPanel();
+        legendContainer.setLayout(new BoxLayout(legendContainer, BoxLayout.Y_AXIS));
+        legendContainer.setBackground(Color.WHITE);
+
+        refreshLegend(); // Populate the legend initially
+
+        JScrollPane scrollPane = new JScrollPane(legendContainer);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
+        scrollPane.setPreferredSize(new Dimension(400, 200)); // Fixed height for the legend
+        return scrollPane;
+    }
+
+    /**
+     * Refresh the legend panel with the latest data.
+     */
+    private void refreshLegend() {
+        legendContainer.removeAll();
+
         if (records == null || records.getAllRecords().isEmpty()) {
             return;
         }
-
-        Graphics2D g2d = (Graphics2D) g;
-
-        int width = getWidth();
-        int height = getHeight();
-        int legendY = height / 2 + (int) (Math.min(width, height) * 0.3) + 20;
-        int legendX = 20;
-
-        int fontSize = Math.max(10, (int) (width * 0.012));
-        g2d.setFont(new Font("Helvetica", Font.PLAIN, fontSize));
 
         double totalAmount = records.getAllRecords().stream().mapToDouble(Record::getAmount).sum();
 
@@ -92,25 +132,33 @@ public class PieChartPanel extends JPanel {
             Record record = records.getAllRecords().get(i);
             double percentage = record.getAmount() / totalAmount;
 
-            String label = record.getPlace() + " (" + String.format("%.1f", percentage * 100) + "%)";
-            if (label.length() > 20) {
-                label = label.substring(0, 17) + "...";
-            }
+            JPanel legendItem = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            legendItem.setBackground(Color.WHITE);
 
-            g2d.setColor(colors.get(i % colors.size()));
-            g2d.fillRect(legendX, legendY + i * (fontSize + 5), 10, 10);
+            JLabel colorBox = new JLabel();
+            colorBox.setOpaque(true);
+            colorBox.setBackground(colors.get(i % colors.size()));
+            colorBox.setPreferredSize(new Dimension(20, 20));
 
-            g2d.setColor(Color.BLACK);
-            g2d.drawString(label, legendX + 15, legendY + i * (fontSize + 5) + fontSize);
+            JLabel label = new JLabel(record.getPlace() + " (" + String.format("%.1f", percentage * 100) + "%)");
+            label.setFont(new Font("Helvetica", Font.PLAIN, 14));
+
+            legendItem.add(colorBox);
+            legendItem.add(Box.createHorizontalStrut(10)); // Add spacing between color and label
+            legendItem.add(label);
+
+            legendContainer.add(legendItem);
         }
+
+        legendContainer.revalidate();
+        legendContainer.repaint();
     }
 
     /**
-     * Consolidates records with the same place into a single record.
-     * Uses the RecordFactory to create new records with an average amount.
-     *
-     * @param originalRecords the original RecordsList
-     * @return a consolidated RecordsList
+     * Consolidate the records by averaging the amounts for each place.
+     * Used when multiple records of the same place are present.
+     * @param originalRecords the original records to consolidate
+     * @return a new RecordsList with consolidated records
      */
     private RecordsList consolidateRecords(RecordsList originalRecords) {
         if (originalRecords == null || originalRecords.getAllRecords().isEmpty()) {
@@ -132,20 +180,18 @@ public class PieChartPanel extends JPanel {
         return new RecordsList(consolidatedRecords);
     }
 
+    /**
+     * Generate a list of random colors for the pie chart slices.
+     * @return a list of random colors
+     */
     private List<Color> generateColors() {
         List<Color> colorPalette = new ArrayList<>();
-        colorPalette.add(Color.ORANGE);
-        colorPalette.add(new Color(0, 102, 204));
-        colorPalette.add(Color.MAGENTA);
-        colorPalette.add(Color.CYAN);
-        colorPalette.add(Color.RED);
-        colorPalette.add(Color.BLUE);
-        colorPalette.add(Color.GREEN);
-        colorPalette.add(Color.PINK);
-        colorPalette.add(Color.YELLOW);
-
+        Random random = new Random();
         for (int i = 0; i < 50; i++) {
-            colorPalette.add(new Color((int) (Math.random() * 0x1000000)));
+            float hue = random.nextFloat();
+            float saturation = 0.5f + random.nextFloat() * 0.5f;
+            float brightness = 0.7f + random.nextFloat() * 0.4f;
+            colorPalette.add(Color.getHSBColor(hue, saturation, brightness));
         }
         return colorPalette;
     }

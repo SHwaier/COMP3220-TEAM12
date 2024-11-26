@@ -1,7 +1,10 @@
 package project;
 
 import javax.swing.*;
+import javax.xml.crypto.Data;
+
 import java.awt.*;
+import java.io.File;
 
 // project and api imports
 import api.RecordsCentral;
@@ -9,6 +12,7 @@ import api.RecordsList;
 import project.filters.FilterManager;
 import project.filters.RegionFilter;
 import project.filters.YearFilter;
+import project.ui.BetterButton;
 import project.ui.FiltersPanel;
 import project.ui.LineGraph;
 import project.ui.PieChartPanel;
@@ -22,15 +26,11 @@ public class ProjectWindow extends JFrame {
         private PieChartPanel myPieChart;
         private LineGraph lineGraph;
 
-        private RecordsList electricityGenerationRecords;
-        private RecordsList electricityAvailableRecords;
-
-        private RecordsList filteredRecords;
-
         public ProjectWindow() {
                 super("COMP 3220 Project");
                 setDefaultCloseOperation(EXIT_ON_CLOSE);
                 setSize(800, 600);
+                this.setMinimumSize(new Dimension(1280, 720));
                 getContentPane().setPreferredSize(new Dimension(800, 600));
                 setResizable(true);
 
@@ -38,22 +38,50 @@ public class ProjectWindow extends JFrame {
 
                 initializeGraphs();
 
-                container.setLayout(new BorderLayout(10, 10)); // Top-level container uses BorderLayout
+                container.setLayout(new GridBagLayout());
 
-                // Filters Panel (WEST) with BoxLayout for vertical alignment
-                JPanel filtersPanel = new JPanel();
-                filtersPanel.setLayout(new BoxLayout(filtersPanel, BoxLayout.Y_AXIS));
-                filtersPanel.add(createFiltersPanel());
-                container.add(filtersPanel, BorderLayout.WEST);
+                JPanel filtersPanel = createFiltersPanel();
+                gbc.gridx = 0;
+                gbc.gridy = 0;
+                gbc.gridheight = 2;
+                gbc.weightx = 0.1;
+                gbc.fill = GridBagConstraints.BOTH;
+                container.add(filtersPanel, gbc);
 
-                // Title Label (NORTH)
-                JLabel titleLabel = new JLabel("Electric Power Dashboard", SwingConstants.CENTER);
+                // Title label and import button row
+                gbc.gridx = 1;
+                gbc.gridy = 0;
+                gbc.gridheight = 1;
+                gbc.weightx = 0.8;
+                gbc.insets = new Insets(20, 20, 10, 20);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+
+                // Create a panel for the title and button
+                JPanel titlePanel = new JPanel(new BorderLayout());
+
+                // Add title label to the left
+                JLabel titleLabel = new JLabel("Electric Power Dashboard");
                 titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-                container.add(titleLabel, BorderLayout.NORTH);
+                titlePanel.add(titleLabel, BorderLayout.WEST);
 
-                // Overview Panel (CENTER)
+                // Add import button to the right
+                BetterButton importButton = new BetterButton("Import Data");
+                importButton.addActionListener(e -> this.importData());
+                titlePanel.add(importButton, BorderLayout.EAST);
+
+                // Add the title panel to the container
+                container.add(titlePanel, gbc);
+                gbc.insets = new Insets(10, 10, 10, 10);
+
+                // Overview panel
                 overviewPanel = createOverviewPanel();
-                container.add(overviewPanel, BorderLayout.CENTER);
+                gbc.gridx = 1;
+                gbc.gridy = 1;
+                gbc.gridheight = 1;
+                gbc.weightx = 0.8;
+                gbc.weighty = 1.0;
+                gbc.fill = GridBagConstraints.BOTH;
+                container.add(overviewPanel, gbc);
 
                 add(container);
 
@@ -81,48 +109,66 @@ public class ProjectWindow extends JFrame {
         }
 
         /**
-         * Helper method to initialize the data from the CSV files.
+         * Helper method to initialize the data into the DataManager.
          */
         private void initializeData() {
                 RecordsCentral recordsCentral = RecordsCentral.getInstance();
-                electricityGenerationRecords = recordsCentral.parseData("data/ElectricityGeneration.csv");
-                electricityAvailableRecords = recordsCentral.parseData("data/ElectricityAvailable.csv");
-                filteredRecords = new RecordsList(electricityGenerationRecords.getAllRecords());
+                DataManager dataManager = DataManager.getInstance();
+
+                dataManager.addDataset("ElectricityGeneration",
+                                recordsCentral.parseResourceData("data/ElectricityGeneration.csv"));
+                dataManager.addDataset("ElectricityAvailable",
+                                recordsCentral.parseResourceData("data/ElectricityAvailable.csv"));
+                dataManager.setActiveDataset("ElectricityGeneration");
+                dataManager.setFilteredRecords(dataManager.getActiveDataset());
         }
 
+        /**
+         * Helper method to initialize the graphs with the filtered records.
+         */
         private void initializeGraphs() {
+                DataManager dataManager = DataManager.getInstance();
                 lineGraph = createLineGraph();
                 myPieChart = createPieChartPanel();
-                lineGraph.setRecords(filteredRecords);
-                myPieChart.setRecords(filteredRecords);
+                lineGraph.setRecords(dataManager.getFilteredRecords());
+                myPieChart.setRecords(dataManager.getFilteredRecords());
         }
 
+        /**
+         * Create the filters panel containing the year and region filters.
+         * 
+         * @return the filters panel
+         */
         private JPanel createFiltersPanel() {
+                DataManager dataManager = DataManager.getInstance();
+
                 return new FiltersPanel(
-                                electricityGenerationRecords,
+                                dataManager.getActiveDataset(),
                                 (selectedYear, selectedRegions) -> {
                                         FilterManager filterManager = new FilterManager();
                                         filterManager.addFilter(new YearFilter(selectedYear));
                                         filterManager.addFilter(new RegionFilter(selectedRegions));
 
                                         RecordsList filteredRecords = new RecordsList(
-                                                        filterManager.applyFilters(electricityGenerationRecords));
-                                        this.filteredRecords = filteredRecords;
-                                        updateUIWithFilteredRecords(filteredRecords);
+                                                        filterManager.applyFilters(dataManager.getActiveDataset()));
+                                        dataManager.setFilteredRecords(filteredRecords);
+                                        updateUIWithFilteredRecords();
                                 });
         }
 
         /**
-         * Upddat relevant UI used in app with filtered records.
+         * Update relevant UI used in app with filtered records.
          * 
          * @param filteredRecords the records to update the UI with.
          */
-        private void updateUIWithFilteredRecords(RecordsList filteredRecords) {
+        private void updateUIWithFilteredRecords() {
+                DataManager dataManager = DataManager.getInstance();
+
                 // Update Pie Chart
-                myPieChart.setRecords(filteredRecords);
+                myPieChart.setRecords(dataManager.getFilteredRecords());
 
                 // Update Line Graph
-                lineGraph.setRecords(filteredRecords);
+                lineGraph.setRecords(dataManager.getFilteredRecords());
 
                 // Refresh the overviewPanel without recreating it
                 overviewPanel.revalidate();
@@ -140,86 +186,98 @@ public class ProjectWindow extends JFrame {
         }
 
         /**
-         * Create the overview panel with the pie chart and line graph.
+         * Create the overview panel containing the line graph and pie chart.
          * 
-         * @return a panel with the pie chart and line graph.
+         * @return the overview panel
          */
         private JPanel createOverviewPanel() {
-                JPanel overviewPanel = new JPanel();
-                overviewPanel.setLayout(new GridBagLayout());
+                JPanel overviewPanel = new JPanel(new GridBagLayout());
+
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new Insets(10, 10, 10, 10);
+                gbc.fill = GridBagConstraints.BOTH;
+                gbc.weightx = 0.5;
+                gbc.weighty = 1.0;
+
+                // Add Line Graph Panel
+                JPanel lineGraphPanel = createChartPanel(
+                                "Electricity Overview Over Time", lineGraph, Color.WHITE,
+                                new Font("Arial", Font.BOLD, 16));
+                gbc.gridx = 0;
+                gbc.gridy = 0;
+                overviewPanel.add(lineGraphPanel, gbc);
+
+                // Add Pie Chart Panel
+                JPanel pieChartPanel = createChartPanel(
+                                "Breakdown By Region", myPieChart, Color.WHITE,
+                                new Font("Arial", Font.BOLD, 16));
+                JLabel pieChartDesc = new JLabel("Sample text.");
+                pieChartDesc.setFont(new Font("Arial", Font.PLAIN, 14));
+                pieChartDesc.setHorizontalAlignment(SwingConstants.CENTER);
+                gbc.gridy++; // Add description below the pie chart
+                pieChartPanel.add(pieChartDesc, gbc);
+
+                gbc.gridx = 1;
+                gbc.gridy = 0;
+                overviewPanel.add(pieChartPanel, gbc);
+
+                return overviewPanel;
+        }
+
+        /**
+         * Create a panel containing a chart with a title.
+         * 
+         * @param title     the title of the chart
+         * @param chart     the chart to display
+         * @param bgColor   the background color of the panel
+         * @param titleFont the font of the title
+         * @return the panel containing the chart
+         */
+        private JPanel createChartPanel(String title, JComponent chart, Color bgColor, Font titleFont) {
+                JPanel chartPanel = new JPanel(new GridBagLayout());
+                chartPanel.setBackground(bgColor);
 
                 GridBagConstraints gbc = new GridBagConstraints();
                 gbc.insets = new Insets(10, 10, 10, 10);
                 gbc.fill = GridBagConstraints.BOTH;
 
-                JPanel lineGraphPanel = new JPanel(new GridBagLayout());
-
-                lineGraphPanel.setBackground(Color.WHITE);
-                // Setting up GridBagConstraints for components within pieChartPanel
+                // Add Title
                 gbc.gridx = 0;
                 gbc.gridy = 0;
                 gbc.weightx = 1.0;
-                gbc.weighty = 0.1; // Small weight for the label to take minimal space
-                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.weighty = 0.1;
                 gbc.anchor = GridBagConstraints.PAGE_START;
-                gbc.insets = new Insets(10, 10, 10, 10); // Add padding for spacing
 
-                // Add the label to the first row
-                JLabel lineGraphLabel = new JLabel("Electricity Overview");
-                lineGraphLabel.setFont(new Font("Arial", Font.BOLD, 16));
-                lineGraphLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                lineGraphPanel.add(lineGraphLabel, gbc);
+                JLabel titleLabel = new JLabel(title);
+                titleLabel.setFont(titleFont);
+                titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                chartPanel.add(titleLabel, gbc);
 
-                // Move to the next row for the line graph
+                // Add Chart
                 gbc.gridy++;
-                gbc.weighty = 1.0; // Larger weight for the pie chart to take most of the space
-                gbc.fill = GridBagConstraints.BOTH;
-                lineGraphPanel.add(lineGraph, gbc);
-
-                // Adding pieChartPanel to the overview panel
-                gbc.gridx = 0;
-                gbc.gridy = 0;
-                gbc.weightx = 0.5;
                 gbc.weighty = 1.0;
-                overviewPanel.add(lineGraphPanel, gbc);
+                chartPanel.add(chart, gbc);
 
-                // Setting up the pie chart panel with GridBagLayout
-                JPanel pieChartPanel = new JPanel(new GridBagLayout());
-                pieChartPanel.setBackground(Color.WHITE);
+                return chartPanel;
+        }
 
-                // Setting up GridBagConstraints for components within pieChartPanel
-                gbc.gridx = 0;
-                gbc.gridy = 0;
-                gbc.weightx = 1.0;
-                gbc.weighty = 0.1; // Small weight for the label to take minimal space
-                gbc.fill = GridBagConstraints.HORIZONTAL;
-                gbc.anchor = GridBagConstraints.PAGE_START;
-                gbc.insets = new Insets(10, 10, 10, 10); // Add padding for spacing
+        /**
+         * Import data from a CSV file.
+         */
+        private void importData() {
+                try {
+                        project.io.Import.importData();
+                        // Update UI with the new data
+                        updateUIWithFilteredRecords();
 
-                // Add the label to the first row
-                JLabel pieChartLabel = new JLabel("Electricity Generation vs. Available Electricity");
-                pieChartLabel.setFont(new Font("Arial", Font.BOLD, 16));
-                pieChartLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                pieChartPanel.add(pieChartLabel, gbc);
-
-                // Move to the next row for the pie chart
-                gbc.gridy++;
-                gbc.weighty = 1.0; // Larger weight for the pie chart to take most of the space
-                gbc.fill = GridBagConstraints.BOTH;
-                pieChartPanel.add(myPieChart, gbc);
-                gbc.gridy++;
-                JLabel pieChartDesc = new JLabel("sample text.");
-                pieChartLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-                pieChartLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                pieChartPanel.add(pieChartDesc, gbc);
-                // Adding pieChartPanel to the overview panel
-                gbc.gridx = 1;
-                gbc.gridy = 0;
-                gbc.weightx = 0.5;
-                gbc.weighty = 1.0;
-                overviewPanel.add(pieChartPanel, gbc);
-
-                return overviewPanel;
+                        // Inform the user of success
+                        JOptionPane.showMessageDialog(this, "Data imported successfully!", "Import Success",
+                                        JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception e) {
+                        JOptionPane.showMessageDialog(this, "Error importing data: " + e.getMessage(), "Import Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                        return;
+                }
         }
 
 }
