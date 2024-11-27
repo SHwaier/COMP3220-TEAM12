@@ -4,13 +4,13 @@ JavaDoc for this project includes, but is not limited to:
 - API 
 - Project Classes
 
-## GitHub Pages 
+## JavaDoc Documentation
 You can access all the JavaDoc auto generated HTML files by clicking: [https://shwaier.github.io/COMP3220-TEAM12/docs/javadoc/](https://shwaier.github.io/COMP3220-TEAM12/docs/javadoc/)
 
 ## Code Repository
 The code repository can be found at: [https://github.com/SHwaier/COMP3220-TEAM12](https://github.com/SHwaier/COMP3220-TEAM12).
 
-## JavaDoc Release
+## Release: API JAR & JavaDoc JAR
 The JavaDoc JAR file can be found at: [https://github.com/SHwaier/COMP3220-TEAM12/releases/](https://github.com/SHwaier/COMP3220-TEAM12/releases/)
 
 You can download all the documentation if you would like, or just the JavaDoc JAR file.
