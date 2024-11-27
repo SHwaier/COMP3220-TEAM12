@@ -12,7 +12,7 @@ To run the tests, in your terminal type `./gradlew test`
 The output of your command will be a link to the index.html file that can be viewed in your browser.
 
 ## Documentation Repository
-The documentation repository for this project can be found on the second branch of this repository "gh-pages", and at the follow link: [https://shwaier.github.io/COMP3220-TEAM12/](https://shwaier.github.io/COMP3220-TEAM12/docs/javadoc/)
+The documentation repository for this project can be found on the second branch of this repository "gh-pages", and at the follow link: [https://shwaier.github.io/COMP3220-TEAM12/](https://shwaier.github.io/COMP3220-TEAM12/)
 
 The page includes links to the following resources:
 - JavaDoc pages: api doc and project doc. 
