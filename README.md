@@ -21,7 +21,10 @@ The page includes links to the following resources:
 
 ## API JAR
 A publicly available JAR file that contains the api package can be found on the release page [https://github.com/SHwaier/COMP3220-TEAM12/releases/](https://github.com/SHwaier/COMP3220-TEAM12/releases/)
+
 **API Documentation:** the api documentation can be found on the documentation GitHub page at [https://shwaier.github.io/COMP3220-TEAM12/docs/javadoc/](https://shwaier.github.io/COMP3220-TEAM12/docs/javadoc/)
+
+To generate your own api jar file simply run the following command: `./gradlew apijar`
 
 ## Data
 Data being used can be found inside `app > src > main > resources > data`
