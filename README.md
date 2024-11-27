@@ -1,7 +1,27 @@
 # COMP3220-TEAM12
 
 ## Build & Run
-Simple: `./gradlew` run from the repository root.
+**Run:** `./gradlew run` from the root folder.
+
+**Build:** `./gradlew build` from the root folder.
+## Unit Tests
+All unit tests are done with JUnit 4 and can be found by going to `app > src > main > test > java`
+
+To run the tests, in your terminal type `./gradlew test`
+
+The output of your command will be a link to the index.html file that can be viewed in your browser.
+
+## Documentation Repository
+The documentation repository for this project can be found on the second branch of this repository "gh-pages", and at the follow link: [https://shwaier.github.io/COMP3220-TEAM12/](https://shwaier.github.io/COMP3220-TEAM12/docs/javadoc/)
+
+The page includes links to the following resources:
+- JavaDoc pages: api doc and project doc. 
+- UML diagrams
+- Release Page
+
+## API JAR
+A publicly available JAR file that contains the api package can be found on the release page [https://github.com/SHwaier/COMP3220-TEAM12/releases/](https://github.com/SHwaier/COMP3220-TEAM12/releases/)
+**API Documentation:** the api documentation can be found on the documentation GitHub page at [https://shwaier.github.io/COMP3220-TEAM12/docs/javadoc/](https://shwaier.github.io/COMP3220-TEAM12/docs/javadoc/)
 
 ## Data
 Data being used can be found inside `app > src > main > resources > data`
