@@ -114,11 +114,17 @@ public class ProjectWindow extends JFrame {
         private void initializeData() {
                 RecordsCentral recordsCentral = RecordsCentral.getInstance();
                 DataManager dataManager = DataManager.getInstance();
+                try {
 
-                dataManager.addDataset("ElectricityGeneration",
-                                recordsCentral.parseResourceData("data/ElectricityGeneration.csv"));
-                dataManager.addDataset("ElectricityAvailable",
-                                recordsCentral.parseResourceData("data/ElectricityAvailable.csv"));
+                        dataManager.addDataset("ElectricityGeneration",
+                                        recordsCentral.parseResourceData("data/ElectricityGeneration.csv"));
+                        dataManager.addDataset("ElectricityAvailable",
+                                        recordsCentral.parseResourceData("data/ElectricityAvailable.csv"));
+                } catch (Exception e) {
+                        JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage(), "Data Load Error",
+                                        JOptionPane.ERROR_MESSAGE);
+                        return;
+                }
                 dataManager.setActiveDataset("ElectricityGeneration");
                 dataManager.setFilteredRecords(dataManager.getActiveDataset());
         }

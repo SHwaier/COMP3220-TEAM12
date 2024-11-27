@@ -16,14 +16,14 @@ repositories {
 }
 
 dependencies {
-    // Use JUnit Jupiter for testing.
-    testImplementation(libs.junit.jupiter)
+    // Use JUnit test framework.
+    testImplementation(files("libs/junit-4.13.2.jar")) 
+    testImplementation("org.hamcrest:hamcrest:2.2")
 
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // This dependency is used by the application.
     implementation(libs.guava)    
-    implementation("org.apache.pdfbox:pdfbox:2.0.27") // Latest version of PDFBox
+    implementation("org.apache.pdfbox:pdfbox:2.0.27") 
     implementation ("com.google.code.gson:gson:2.8.9")
 
 }
@@ -41,6 +41,6 @@ application {
 }
 
 tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
+    // Configure tests to use JUnit 4
+    useJUnit()
 }
